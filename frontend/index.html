@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphRAG Platform</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Highlight.js for Markdown code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Login View -->
+    <div id="login-view" class="view-container active">
+        <div class="login-box glass-panel">
+            <div class="login-header">
+                <div class="logo-icon"><i class="fa-solid fa-project-diagram"></i></div>
+                <h1>GraphRAG Platform</h1>
+                <p>Welcome back. Please log in.</p>
+            </div>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="username" required placeholder="Enter your username">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" required placeholder="Enter your password">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Sign In</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+            <div id="login-error" class="error-text hidden">Invalid username or password.</div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard View -->
+    <div id="app-view" class="view-container hidden layout-dashboard">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel-dark">
+            <div class="sidebar-header">
+                <div class="logo-icon small"><i class="fa-solid fa-project-diagram"></i></div>
+                <h2>GraphRAG</h2>
+            </div>
+            
+            <div class="sidebar-user">
+                <div class="avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="user-info">
+                    <div id="nav-username" class="user-name">User</div>
+                    <div id="nav-role" class="user-role badge badge-primary">user</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Workspace</div>
+                    <a href="#" class="nav-item active" data-tab="tab-chat"><i class="fa-solid fa-message"></i> AI Chat</a>
+                    <a href="#" class="nav-item" data-tab="tab-documents"><i class="fa-solid fa-file-lines"></i> My Documents</a>
+                    <a href="#" class="nav-item" data-tab="tab-search"><i class="fa-solid fa-magnifying-glass"></i> Search Playground</a>
+                    <a href="#" class="nav-item" data-tab="tab-graph"><i class="fa-solid fa-chart-network"></i> Graph Explorer</a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="#" class="nav-item" data-tab="tab-token"><i class="fa-solid fa-key"></i> API Token</a>
+                </div>
+
+                <div class="nav-section admin-only hidden">
+                    <div class="nav-section-title">Superadmin</div>
+                    <a href="#" class="nav-item" data-tab="tab-admin-users"><i class="fa-solid fa-users"></i> User Management</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-docs"><i class="fa-solid fa-folder-open"></i> All Documents</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-prompts"><i class="fa-solid fa-terminal"></i> Prompts</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-settings"><i class="fa-solid fa-sliders"></i> Settings & Env</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-usage"><i class="fa-solid fa-chart-simple"></i> Usage Dashboard</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-indexer"><i class="fa-solid fa-bolt"></i> System Indexer</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-export"><i class="fa-solid fa-download"></i> Export Center</a>
+                    <a href="#" class="nav-item" data-tab="tab-admin-docs-api"><i class="fa-solid fa-book-open"></i> API Docs</a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn btn-ghost btn-block">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Topbar -->
+            <header class="topbar glass-panel-dark">
+                <h2 id="current-tab-title">AI Chat</h2>
+                <div class="topbar-actions">
+                    <div class="notification-bell" id="btn-notifications">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge-count hidden" id="notification-count">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Notifications Dropdown (Hidden by default) -->
+            <div id="notifications-panel" class="notifications-panel glass-panel hidden">
+                <div class="panel-header">
+                    <h3>Notifications</h3>
+                    <button id="btn-read-all" class="btn btn-text btn-sm">Mark all read</button>
+                </div>
+                <div class="panel-content" id="notifications-list">
+                    <div class="empty-state">No new notifications</div>
+                </div>
+            </div>
+
+            <div class="tab-content-container">
+                
+                <!-- Tab: AI Chat -->
+                <div id="tab-chat" class="tab-pane active">
+                    <div class="chat-container">
+                        <div class="chat-history" id="chat-history">
+                            <div class="chat-message assistant">
+                                <div class="message-avatar"><i class="fa-solid fa-robot"></i></div>
+                                <div class="message-bubble">
+                                    Hello! I am connected to your GraphRAG knowledge base. Ask me anything about your indexed documents.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area glass-panel-dark">
+                            <form id="chat-form">
+                                <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary btn-icon"><i class="fa-solid fa-paper-plane"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: My Documents -->
+                <div id="tab-documents" class="tab-pane">
+                    <div class="page-header">
+                        <div class="header-content">
+                            <h3>Document Library</h3>
+                            <p>Upload .txt, .csv, or .json files to be indexed into your knowledge graph.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="document.getElementById('file-upload').click()">
+                            <i class="fa-solid fa-upload"></i> Upload File
+                        </button>
+                        <input type="file" id="file-upload" class="hidden" accept=".txt,.csv,.json" multiple>
+                    </div>
+                    
+                    <div class="card glass-panel">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Size</th>
+                                    <th>Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documents-table-body">
+                                <tr><td colspan="4" class="text-center text-muted">Loading documents...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="action-bar mt-4">
+                        <button id="btn-trigger-index" class="btn btn-success">
+                            <i class="fa-solid fa-play"></i> Trigger Indexing Pipeline
+                        </button>
+                        <p class="text-sm text-muted ml-3">Run this after uploading new documents to update your graph.</p>
+                    </div>
+                </div>
+
+                <!-- Tab: Search Playground -->
+                <div id="tab-search" class="tab-pane">
+                    <div class="card glass-panel mb-4">
+                        <div class="search-controls">
+                            <select id="search-type" class="form-select">
+                                <option value="local">Local Search (Entity-focused)</option>
+                                <option value="global">Global Search (Theme-focused)</option>
+                                <option value="drift">Drift Search</option>
+                                <option value="basic">Basic Vector Search</option>
+                            </select>
+                            <input type="text" id="search-query" class="form-input" placeholder="Enter your search query...">
+                            <button id="btn-execute-search" class="btn btn-primary"><i class="fa-solid fa-search"></i> Search</button>
+                        </div>
+                    </div>
+                    
+                    <div class="search-results-container card glass-panel hidden" id="search-results-box">
+                        <div class="result-meta mb-2 text-sm text-muted">
+                            <span class="badge badge-outline" id="res-type">Local</span> 
+                            Completed in <span id="res-time">0.00</span>s
+                        </div>
+                        <div id="search-result-content" class="markdown-body"></div>
+                    </div>
+                </div>
+
+                <!-- Tab: Graph Explorer -->
+                <div id="tab-graph" class="tab-pane">
+                    <div class="card glass-panel h-100 flex-column">
+                        <div class="panel-header border-bottom pb-3 mb-3">
+                            <h3>Interactive Knowledge Graph</h3>
+                            <button class="btn btn-outline btn-sm" id="btn-refresh-graph"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                        </div>
+                        <div class="graph-viewport flex-grow-1" id="cy-container" style="min-height: 500px; background: rgba(0,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <div class="text-muted"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading graph visualization... (Mock)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: API Token -->
+                <div id="tab-token" class="tab-pane">
+                    <div class="card glass-panel max-w-lg">
+                        <h3>Your API Token</h3>
+                        <p class="text-muted mb-4">Use this token to authenticate programmatic REST API requests via the <code>Authorization: Bearer &lt;token&gt;</code> header.</p>
+                        
+                        <div class="token-display mb-4">
+                            <input type="text" id="api-token-value" class="form-input text-monospace" readonly value="Loading...">
+                            <button class="btn btn-secondary btn-icon" id="btn-copy-token" title="Copy to clipboard"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div>
+                                <strong>Warning:</strong> Regenerating your token will immediately invalidate your old token. Any scripts using the old token will fail.
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-right">
+                            <button id="btn-regen-token" class="btn btn-danger"><i class="fa-solid fa-arrows-rotate"></i> Regenerate Token</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- --- SUPERADMIN TABS --- -->
+
+                <!-- Tab: Admin - Users -->
+                <div id="tab-admin-users" class="tab-pane">
+                    <div class="page-header">
+                        <h3>User Management</h3>
+                        <button class="btn btn-primary" id="btn-show-create-user"><i class="fa-solid fa-user-plus"></i> New User</button>
+                    </div>
+                    <div class="card glass-panel">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Admin - Settings -->
+                <div id="tab-admin-settings" class="tab-pane">
+                    <div class="grid-2">
+                        <!-- LLM Settings -->
+                        <div class="card glass-panel">
+                            <div class="panel-header mb-3">
+                                <h3>LLM Provider Settings</h3>
+                                <button class="btn btn-outline btn-sm" id="btn-test-llm">Test Connection</button>
+                            </div>
+                            <form id="llm-settings-form">
+                                <div class="form-group mb-3">
+                                    <label>Provider</label>
+                                    <select class="form-select" id="llm-provider">
+                                        <option value="openai">OpenAI</option>
+                                        <option value="deepseek">DeepSeek</option>
+                                        <option value="openrouter">OpenRouter</option>
+                                        <option value="custom">Self-Hosted / Custom</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Model Name</label>
+                                    <input type="text" class="form-input" id="llm-model" value="gpt-4o-mini">
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label>API Base URL (Optional)</label>
+                                    <input type="text" class="form-input" id="llm-base" placeholder="e.g. https://api.deepseek.com/v1">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save LLM Settings</button>
+                            </form>
+                        </div>
+
+                        <!-- Env Settings -->
+                        <div class="card glass-panel">
+                            <div class="panel-header mb-3">
+                                <h3>Environment Variables (.env)</h3>
+                                <button class="btn btn-danger btn-sm" id="btn-restart-svc"><i class="fa-solid fa-power-off"></i> Restart Service</button>
+                            </div>
+                            <div id="env-vars-container" class="env-vars-list">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Admin - API Docs -->
+                <div id="tab-admin-docs-api" class="tab-pane">
+                    <div class="card glass-panel h-100 p-0 overflow-hidden">
+                        <iframe src="/docs" frameborder="0" width="100%" height="100%" style="min-height: 80vh; background: #fff;"></iframe>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+    
+    <div id="modal-create-user" class="modal glass-panel hidden">
+        <div class="modal-header">
+            <h3>Create New User</h3>
+            <button class="btn-close" onclick="closeModal('modal-create-user')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="form-create-user">
+                <div class="form-group mb-3">
+                    <label>Username</label>
+                    <input type="text" id="cu-username" class="form-input" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label>Password</label>
+                    <input type="password" id="cu-password" class="form-input" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label>Role</label>
+                    <select id="cu-role" class="form-select">
+                        <option value="user">User</option>
+                        <option value="superadmin">Superadmin</option>
+                    </select>
+                </div>
+                <div class="mt-4 flex gap-2 justify-end">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('modal-create-user')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
