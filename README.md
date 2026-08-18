@@ -1,82 +1,81 @@
-# GraphRAG
+# Custom GraphRAG Platform
+**Built by [@Daly-belguith](https://github.com/Daly-belguith)**
 
-> [!WARNING]
-> GraphRAG is a research project that explores the functional use of graphs to form a targeted context for question answering. Since our first release in July 2024 the capabilities of frontier models have changed dramatically, and our portfolio of research projects has diversified to match. This project is largely in maintenance mode, and won't be accepting new PRs or implementing new features. We'll perform bug fixes and dependency updates as appropriate, particularly to address CVEs as they arise.
+Welcome to the **Custom GraphRAG Platform**! This project transforms the original Microsoft GraphRAG CLI tool into a fully standalone, Dockerized, multi-tenant API platform with a modern, glassmorphic UI.
 
-> [!NOTE]
-> **About this project:** This repository is an independent, community-driven variation of the original Microsoft GraphRAG research project. It is purpose-built for lightweight self-hosting on any standard VPS and provides native, out-of-the-box support for standard OpenAI API keys without enterprise cloud lock-in.
+## What's Inside?
 
-👉 [Microsoft Research Blog Post](https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/)<br/>
-👉 [Read the docs](https://microsoft.github.io/graphrag)<br/>
-👉 [GraphRAG Arxiv](https://arxiv.org/pdf/2404.16130)
+We took the core Knowledge Graph capabilities of GraphRAG and wrapped them in a production-ready web platform.
 
-<div align="left">
-  <a href="https://pypi.org/project/graphrag/">
-    <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/graphrag">
-  </a>
-  <a href="https://pypi.org/project/graphrag/">
-    <img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/graphrag">
-  </a>
-  <a href="https://github.com/microsoft/graphrag/issues">
-    <img alt="GitHub Issues" src="https://img.shields.io/github/issues/microsoft/graphrag">
-  </a>
-  <a href="https://github.com/microsoft/graphrag/discussions">
-    <img alt="GitHub Discussions" src="https://img.shields.io/github/discussions/microsoft/graphrag">
-  </a>
-</div>
+### Core Features
+* **Per-User Index Isolation**: Total privacy. User A's documents, Knowledge Graphs, and queries are strictly isolated from User B's.
+* **Role-Based Access Control (RBAC)**: Supports `superadmin` and `user` roles.
+* **Dual Authentication**: Session-based JWTs for the Frontend, and unique, regeneratable API Keys for REST API access.
+* **AI Chat**: A multi-turn conversational interface that queries your Knowledge Graph directly.
+* **Superadmin Dashboard**: Live Usage tracking, User CRUD, Prompt editing, and dynamic Environment/LLM settings via the UI.
+* **100% Azure Decoupled**: Runs entirely on local files and LanceDB vector storage. Deploys anywhere Docker runs.
 
-## Overview
+---
 
-The GraphRAG project is a data pipeline and transformation suite that is designed to extract meaningful, structured data from unstructured text using the power of LLMs.
+## 🚀 Quick Start Deployment
 
-To learn more about GraphRAG and how it can be used to enhance your LLM's ability to reason about your private data, please visit the <a href="https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/" target="_blank">Microsoft Research Blog Post.</a>
+Deploy the platform on your local machine or a VPS in minutes.
 
-## Quickstart
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/Daly-belguith/Custom-graphrag.git
+   cd Custom-graphrag
+   ```
 
-To get started with the GraphRAG system we recommend trying the [command line quickstart](https://microsoft.github.io/graphrag/get_started/).
+2. **Configure Environment**
+   ```bash
+   cp .env.example .env
+   # Open .env and insert your API keys (e.g. GRAPHRAG_API_KEY)
+   ```
 
-## Repository Guidance
+3. **Spin up with Docker Compose**
+   ```bash
+   docker-compose up --build -d
+   ```
 
-This repository presents a methodology for using knowledge graph memory structures to enhance LLM outputs. Please note that the provided code serves as a demonstration and is not an officially supported Microsoft offering.
+4. **Access the Platform**
+   * Open `http://localhost:8000` in your browser.
+   * Default Login: `admin` / `admin123`
 
-⚠️ _Warning: GraphRAG indexing can be an expensive operation, please read all of the documentation to understand the process and costs involved, and start small._
+---
 
-## Diving Deeper
+## 📖 Walkthrough & Implementation Details
 
-- To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
-- To start developing _GraphRAG_, see [DEVELOPING.md](./DEVELOPING.md)
-- Join the conversation and provide feedback in the [GitHub Discussions tab!](https://github.com/microsoft/graphrag/discussions)
+Here is a breakdown of the massive transformation that makes up this platform:
 
-## Prompt Tuning
+### 1. Decoupling and Architecture Cleanup
+- **Azure Dependencies Removed:** All `azure-*` packages were stripped from the `pyproject.toml` files across the workspace. We made Azure imports "lazy", so they are only required if a user specifically configures `AzureManagedIdentity`.
+- **Public PyPI Support:** The internal Microsoft package feed proxy was removed from the root `pyproject.toml`, allowing the project to build cleanly from public PyPI.
 
-Using _GraphRAG_ with your data out of the box may not yield the best possible results.
-We strongly recommend to fine-tune your prompts following the [Prompt Tuning Guide](https://microsoft.github.io/graphrag/prompt_tuning/overview/) in our documentation.
+### 2. Authentication & Database Engine
+- **SQLite + SQLAlchemy (`api_service/auth/`):** A robust, thread-safe database connection was implemented, saving to `data/graphrag_auth.db`.
+- **RBAC (Role-Based Access Control):** Two roles were introduced:
+  - `user`: Standard access restricted to their own documents and queries.
+  - `superadmin`: God-mode access to all users, settings, and prompts.
 
-## Versioning
+### 3. The FastAPI Backend (`api_service/`)
+A massive modular API was built with 14 distinct router files:
+- **Documents & Indexing:** `POST /documents/upload` and `POST /indexing/start`. The system enforces **Per-User Index Isolation** — each user's files and Parquet graphs are segregated into `input/users/{user_id}` and `output/users/{user_id}`.
+- **Query Engine:** Endpoints for Local, Global, Drift, and Basic search methods.
+- **Usage & Rate Limiting:** All queries log token consumption and latency to the database. A sliding-window Rate Limiter middleware restricts requests per IP.
+- **Settings & Prompts (Admin):** Superadmins can change the LLM Provider (OpenAI/DeepSeek/OpenRouter) dynamically via UI, edit `.env` variables, and modify the 13 core GraphRAG system prompts.
 
-Please see the [breaking changes](./breaking-changes.md) document for notes on our approach to versioning the project.
+### 4. Modern Frontend SPA (`frontend/`)
+We built a beautiful, Vanilla JS + CSS Single Page Application (SPA) utilizing a **Glassmorphism** dark mode aesthetic.
+- **Interactive Tabbing:** Smooth navigation between My Documents, AI Chat, Search Playground, Graph Explorer, and API Tokens.
+- **Superadmin Dashboard:** Exclusive tabs for User Management, System Usage Charts, Environment Config, Prompt Editing, and a Swagger Docs iframe.
+- **Markdown & Code:** The AI Chat and Search results use `marked.js` and `highlight.js` to render beautiful responses with syntax highlighting.
 
-_Always run `graphrag init --root [path] --force` between minor version bumps to ensure you have the latest config format. Run the provided migration notebook between major version bumps if you want to avoid re-indexing prior datasets. Note that this will overwrite your configuration and prompts, so back them up if necessary._
+---
 
-## Responsible AI FAQ
+## 📚 Further Reading
 
-See [RAI_TRANSPARENCY.md](./RAI_TRANSPARENCY.md)
+For a deeper dive into configuring different LLM Providers (DeepSeek, OpenRouter, Ollama) and understanding the architecture differences between Vector RAG and GraphRAG, check out the [GRAPHRAG_GUIDE.md](GRAPHRAG_GUIDE.md).
 
-- [What is GraphRAG?](./RAI_TRANSPARENCY.md#what-is-graphrag)
-- [What can GraphRAG do?](./RAI_TRANSPARENCY.md#what-can-graphrag-do)
-- [What are GraphRAG’s intended use(s)?](./RAI_TRANSPARENCY.md#what-are-graphrags-intended-uses)
-- [How was GraphRAG evaluated? What metrics are used to measure performance?](./RAI_TRANSPARENCY.md#how-was-graphrag-evaluated-what-metrics-are-used-to-measure-performance)
-- [What are the limitations of GraphRAG? How can users minimize the impact of GraphRAG’s limitations when using the system?](./RAI_TRANSPARENCY.md#what-are-the-limitations-of-graphrag-how-can-users-minimize-the-impact-of-graphrags-limitations-when-using-the-system)
-- [What operational factors and settings allow for effective and responsible use of GraphRAG?](./RAI_TRANSPARENCY.md#what-operational-factors-and-settings-allow-for-effective-and-responsible-use-of-graphrag)
-
-## Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
-trademarks or logos is subject to and must follow
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-## Privacy
-
-[Microsoft Privacy Statement](https://privacy.microsoft.com/en-us/privacystatement)
+---
+*Powered by [GraphRAG](https://github.com/microsoft/graphrag)*
