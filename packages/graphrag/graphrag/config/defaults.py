@@ -37,7 +37,6 @@ DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 DEFAULT_MODEL_PROVIDER = "openai"
 
 ENCODING_MODEL = "o200k_base"
-COGNITIVE_SERVICES_AUDIENCE = "https://cognitiveservices.azure.com/.default"
 
 DEFAULT_ENTITY_TYPES = ["organization", "person", "geo", "event"]
 

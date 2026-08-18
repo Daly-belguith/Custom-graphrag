@@ -8,14 +8,10 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient
-
-
 class BlobWorkflowLogger(logging.Handler):
     """A logging handler that writes to a blob storage account."""
 
-    _blob_service_client: BlobServiceClient
+    _blob_service_client: Any
     _container_name: str
     _max_block_count: int = 25000  # 25k blocks per blob
 
@@ -41,6 +37,9 @@ class BlobWorkflowLogger(logging.Handler):
         self._connection_string = connection_string
         self.account_url = account_url
         self._base_dir = base_dir
+
+        from azure.identity import DefaultAzureCredential
+        from azure.storage.blob import BlobServiceClient
 
         if self._connection_string:
             self._blob_service_client = BlobServiceClient.from_connection_string(

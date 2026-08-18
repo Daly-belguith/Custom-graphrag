@@ -7,7 +7,6 @@ from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any, Unpack
 
 import litellm
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from litellm import ModelResponse  # type: ignore
 
 from graphrag_llm.completion.completion import LLMCompletion
@@ -244,6 +243,8 @@ def _create_base_completions(
     }
 
     if model_config.auth_method == AuthMethod.AzureManagedIdentity:
+        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
         base_args["azure_ad_token_provider"] = get_bearer_token_provider(
             DefaultAzureCredential(), azure_cognitive_services_audience
         )

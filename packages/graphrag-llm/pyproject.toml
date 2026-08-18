@@ -32,7 +32,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "azure-identity~=1.25",
     # fastapi is required for litellm tool calling. https://github.com/BerriAI/litellm/issues/32993
     "fastapi>=0.136.3,<1.0",
     "graphrag-cache==3.1.1",

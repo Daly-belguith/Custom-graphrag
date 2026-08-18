@@ -6,7 +6,6 @@
 from typing import TYPE_CHECKING, Any, Unpack
 
 import litellm
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
 from graphrag_llm.config.types import AuthMethod
 from graphrag_llm.embedding.embedding import LLMEmbedding
@@ -177,6 +176,8 @@ def _create_base_embeddings(
     }
 
     if model_config.auth_method == AuthMethod.AzureManagedIdentity:
+        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
         base_args["azure_ad_token_provider"] = get_bearer_token_provider(
             DefaultAzureCredential(), azure_cognitive_services_audience
         )
