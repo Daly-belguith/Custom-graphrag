@@ -19,10 +19,9 @@ COPY packages/ packages/
 COPY api_service/ api_service/
 COPY frontend/ frontend/
 
-# Install dependencies using uv
-# We use the system python environment since we're in a container
-RUN uv pip install --system -e .
-RUN uv pip install --system fastapi uvicorn python-jose[cryptography] passlib[bcrypt] pydantic[email] python-multipart
+# Install workspace sub-packages and API dependencies
+RUN uv pip install --system ./packages/*
+RUN uv pip install --system fastapi uvicorn python-jose[cryptography] passlib[bcrypt] "bcrypt<4.0.0" pydantic[email] python-multipart sqlalchemy
 
 # Expose FastAPI port
 EXPOSE 8000
